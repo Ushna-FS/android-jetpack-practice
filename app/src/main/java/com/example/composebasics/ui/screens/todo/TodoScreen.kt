@@ -6,21 +6,23 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.composebasics.R
 import com.example.composebasics.data.Todo
+import androidx.compose.foundation.layout.Row
+import com.example.composebasics.ui.theme.getTodoCardColor
+import com.example.composebasics.ui.components.SwipeToDeleteContainer
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TodoScreen(
-    viewModel: TodoViewModel = viewModel()
+    viewModel: TodoViewModel
 ) {
 
     // Collecting StateFlow as Compose State(recomposition trigger)
@@ -33,17 +35,13 @@ fun TodoScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Todo List") },
-                actions = {
-                    // Filter toggle button
-                    TextButton(onClick = { showCompleted = !showCompleted }) {
-                        Text(if (showCompleted) "Hide Completed" else "Show All")
-                    }
+            TopAppBar(title = { Text(stringResource(R.string.todo_list)) }, actions = {
+                // Filter toggle button
+                TextButton(onClick = { showCompleted = !showCompleted }) {
+                    Text(if (showCompleted) "Hide Completed" else "Show All")
                 }
-            )
-        }
-    ) { paddingValues ->
+            })
+        }) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -64,21 +62,22 @@ fun TodoScreen(
                 )
 
                 Button(
-                    onClick = { viewModel.addTodo() },
-                    enabled = newTodoText.isNotBlank()
+                    onClick = { viewModel.addTodo() }, enabled = newTodoText.isNotBlank()
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "Add")
+                    Icon(Icons.Default.Add, contentDescription = "")
                 }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
             // LazyColumn only composes items visible on screen + buffer
-            Text("Tasks (${todos.size})", style = MaterialTheme.typography.titleMedium)
+            Text(
+                stringResource(R.string.todo_text_count, todos.size),
+                style = MaterialTheme.typography.titleMedium
+            )
 
             LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.fillMaxWidth()
+                verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()
             ) {
                 // Filter todos based on showCompleted state
                 val filteredTodos = if (showCompleted) {
@@ -89,44 +88,49 @@ fun TodoScreen(
 
 
                 items(
-                    items = filteredTodos,
-                    key = { todo -> todo.id } // unique key for each item (helps recomposition)
+                    filteredTodos,
+                    key = { todo -> todo.id }
                 ) { todo ->
-                    // Each item is a composable that recomposes independently
-                    TodoItem(
-                        todo = todo,
-                        onToggle = { viewModel.toggleTodo(todo.id) },
-                        onDelete = { viewModel.deleteTodo(todo.id) }
-                    )
-                }
-            }
 
-            //  conditional UI (recomposition demo)
-            if (todos.isEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .weight(1f),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("No todos yet. Add one now!")
+                    SwipeToDeleteContainer(
+                        item = todo,
+                        onDelete = { viewModel.deleteTodo(it.id) }
+                    ) { item ->
+                        TodoItem(
+                            todo = item,
+                            onToggle = { viewModel.toggleTodo(item.id) }
+                        )
+                    }
                 }
             }
         }
+        //  conditional UI (recomposition demo)
+        if (todos.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(stringResource(R.string.no_todos_text))
+            }
+        }
+
     }
 }
 
+
 @Composable
 fun TodoItem(
-    todo: Todo,
-    onToggle: () -> Unit,
-    onDelete: () -> Unit
+    todo: Todo, onToggle: () -> Unit
 ) {
     // This state is forr specific todo item
     var isExpanded by remember { mutableStateOf(false) }
+    val backgroundColor = getTodoCardColor(todo.id)
 
     Card(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(
+            containerColor = backgroundColor
+        )
     ) {
         Column(
             modifier = Modifier
@@ -146,9 +150,7 @@ fun TodoItem(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Checkbox(
-                        checked = todo.isCompleted,
-                        onCheckedChange = { onToggle() }
-                    )
+                        checked = todo.isCompleted, onCheckedChange = { onToggle() })
 
                     Text(
                         text = todo.title,
@@ -162,10 +164,21 @@ fun TodoItem(
                         }
                     )
                 }
-
-                IconButton(onClick = onDelete) {
-                    Icon(Icons.Default.Delete, contentDescription = "Delete")
-                }
+                AssistChip(
+                    onClick = { },
+                    label = {
+                        Text(
+                            if (todo.isCompleted) "Completed" else "Pending"
+                        )
+                    },
+                    colors = AssistChipDefaults.assistChipColors(
+                        containerColor =
+                            if (todo.isCompleted)
+                                MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f)
+                            else
+                                MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f)
+                    )
+                )
             }
 
             //  appears/disappears based on isExpanded state
@@ -187,8 +200,8 @@ fun TodoItem(
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun TodoScreenPreview() {
-    TodoScreen()
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun TodoScreenPreview() {
+//    TodoScreen()
+//}
