@@ -27,6 +27,9 @@ fun <T> SwipeToDeleteContainer(
     var isRemoved by remember { mutableStateOf(false) }
 
     val dismissState = rememberSwipeToDismissBoxState(
+        positionalThreshold = { totalDistance ->
+            totalDistance * 0.6f   // require 60% swipe instead of default ~30%
+        },
         confirmValueChange = { value ->
             if (value == SwipeToDismissBoxValue.EndToStart) {
                 isRemoved = true
@@ -65,9 +68,13 @@ fun <T> SwipeToDeleteContainer(
 @Composable
 fun DeleteBackground(dismissState: SwipeToDismissBoxState) {
 
-    val color = if (dismissState.targetValue ==
-        SwipeToDismissBoxValue.EndToStart
-    ) Color.Red else Color.LightGray
+    val isSwiping = dismissState.dismissDirection ==
+            SwipeToDismissBoxValue.EndToStart
+
+    val color = if (isSwiping)
+        Color.Red
+    else
+        Color.Transparent
 
     Box(
         modifier = Modifier
@@ -76,10 +83,13 @@ fun DeleteBackground(dismissState: SwipeToDismissBoxState) {
             .padding(horizontal = 20.dp),
         contentAlignment = Alignment.CenterEnd
     ) {
-        Icon(
-            imageVector = Icons.Default.Delete,
-            contentDescription = "Delete",
-            tint = Color.White
-        )
+
+        if (isSwiping) {   // show icon only while swiping
+            Icon(
+                imageVector = Icons.Default.Delete,
+                contentDescription = "Delete",
+                tint = Color.White
+            )
+        }
     }
 }

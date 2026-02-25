@@ -23,6 +23,10 @@ private val DarkPastels = listOf(
     Color(0xFFCE93D8)  // stronger purple
 )
 
+object TodoColors {
+    val pending = Color(0xF5F6E765)
+    val completed = Color(0xDF6CE070)
+}
 @Composable
 fun getTodoCardColor(index: Int): Color {
 
