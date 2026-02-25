@@ -16,8 +16,12 @@ import androidx.compose.ui.unit.dp
 import com.example.composebasics.R
 import com.example.composebasics.data.Todo
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.ui.graphics.Color
 import com.example.composebasics.ui.theme.getTodoCardColor
 import com.example.composebasics.ui.components.SwipeToDeleteContainer
+import com.example.composebasics.ui.theme.TodoColors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -166,24 +170,35 @@ fun TodoItem(
                 }
                 AssistChip(
                     onClick = { },
+
                     label = {
                         Text(
-                            if (todo.isCompleted) "Completed" else "Pending"
+                            text = if (todo.isCompleted) "Completed" else "Pending",
+                            color = Color.Black
                         )
                     },
+
+                    modifier = Modifier,
+                    shape = RoundedCornerShape(12.dp),
+
+                    border = null,
+
                     colors = AssistChipDefaults.assistChipColors(
                         containerColor =
                             if (todo.isCompleted)
-                                MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f)
+                                TodoColors.completed
                             else
-                                MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f)
+                                TodoColors.pending
+                    ),
+                    elevation = AssistChipDefaults.assistChipElevation(
+                        elevation = 6.dp  // shadow
                     )
                 )
             }
 
             //  appears/disappears based on isExpanded state
             if (isExpanded) {
-                Divider(modifier = Modifier.padding(vertical = 8.dp))
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                 Text(
                     text = "Details: This is additional info about '${todo.title}'",
                     style = MaterialTheme.typography.bodySmall,
@@ -199,7 +214,7 @@ fun TodoItem(
         }
     }
 }
-
+//
 //@Preview(showBackground = true)
 //@Composable
 //fun TodoScreenPreview() {
