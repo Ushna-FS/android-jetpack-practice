@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.ui.graphics.Color
+import androidx.navigation.NavController
 import com.example.composebasics.ui.theme.getTodoCardColor
 import com.example.composebasics.ui.components.SwipeToDeleteContainer
 import com.example.composebasics.ui.theme.TodoColors
@@ -26,12 +27,12 @@ import com.example.composebasics.ui.theme.TodoColors
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TodoScreen(
+    navController: NavController,
     viewModel: TodoViewModel
 ) {
 
     // Collecting StateFlow as Compose State(recomposition trigger)
     val todos by viewModel.todos.collectAsState()
-    val newTodoText by viewModel.newTodoText.collectAsState()
 
 
     // local statte that survives recomposition
@@ -45,33 +46,24 @@ fun TodoScreen(
                     Text(if (showCompleted) "Hide Completed" else "Show All")
                 }
             })
-        }) { paddingValues ->
+        },
+        floatingActionButton = {
+            if (todos.isNotEmpty()) {
+                FloatingActionButton(
+                    onClick = { navController.navigate(TodoRoutes.ADD_TODO) }
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Add Task")
+                }
+            }
+        }
+
+    ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
                 .padding(16.dp)
         ) {
-            // Row for adding new todos
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                OutlinedTextField(
-                    value = newTodoText,
-                    onValueChange = { viewModel.updateNewTodoText(it) },
-                    label = { Text("Add new todo") },
-                    modifier = Modifier.weight(1f),
-                    singleLine = true
-                )
-
-                Button(
-                    onClick = { viewModel.addTodo() }, enabled = newTodoText.isNotBlank()
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = "")
-                }
-            }
-
             Spacer(modifier = Modifier.height(16.dp))
 
             // LazyColumn only composes items visible on screen + buffer
@@ -80,6 +72,7 @@ fun TodoScreen(
                 style = MaterialTheme.typography.titleMedium
             )
 
+            Spacer(modifier = Modifier.height(10.dp))
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()
             ) {
@@ -111,14 +104,30 @@ fun TodoScreen(
         //  conditional UI (recomposition demo)
         if (todos.isEmpty()) {
             Box(
-                modifier = Modifier
-                    .fillMaxSize(),
+                modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                Text(stringResource(R.string.no_todos_text))
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+
+                    Text(
+                        text = "No tasks, add now",
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+
+                    Button(
+                        onClick = { navController.navigate(TodoRoutes.ADD_TODO) },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Add Task")
+                    }
+                }
             }
         }
-
     }
 }
 
@@ -199,11 +208,13 @@ fun TodoItem(
             //  appears/disappears based on isExpanded state
             if (isExpanded) {
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                Text(
-                    text = "Details: This is additional info about '${todo.title}'",
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(start = 36.dp, bottom = 8.dp)
-                )
+                if (!todo.description.isNullOrBlank()) {
+                    Text(
+                        text = "Description: ${todo.description}",
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(start = 36.dp, bottom = 8.dp)
+                    )
+                }
 
                 Text(
                     text = "Status: ${if (todo.isCompleted) "✓ Completed" else "○ Pending"}",
