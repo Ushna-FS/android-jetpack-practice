@@ -1,30 +1,22 @@
 package com.example.composebasics.ui.screens.todo
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.example.composebasics.R
-import com.example.composebasics.data.Todo
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavController
-import com.example.composebasics.ui.theme.getTodoCardColor
 import com.example.composebasics.ui.components.SwipeToDeleteContainer
-import com.example.composebasics.ui.theme.TodoColors
+import com.example.composebasics.ui.components.TodoItem
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TodoScreen(
     navController: NavController,
@@ -40,17 +32,16 @@ fun TodoScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text(stringResource(R.string.todo_list)) }, actions = {
-                // Filter toggle button
-                TextButton(onClick = { showCompleted = !showCompleted }) {
-                    Text(if (showCompleted) "Hide Completed" else "Show All")
-                }
-            })
+            TodoTopBar(
+                showCompleted = showCompleted,
+                onSearchClick = {},
+                onToggleCompleted = { showCompleted = !showCompleted })
         },
         floatingActionButton = {
             if (todos.isNotEmpty()) {
                 FloatingActionButton(
-                    onClick = { navController.navigate(TodoRoutes.ADD_TODO) }
+                    onClick = { navController.navigate(TodoRoutes.ADD_TODO) },
+                    containerColor = MaterialTheme.colorScheme.primary
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "Add Task")
                 }
@@ -131,95 +122,48 @@ fun TodoScreen(
     }
 }
 
-
 @Composable
-fun TodoItem(
-    todo: Todo, onToggle: () -> Unit
+fun TodoTopBar(
+    showCompleted: Boolean,
+    onSearchClick: () -> Unit,
+    onToggleCompleted: () -> Unit
 ) {
-    // This state is forr specific todo item
-    var isExpanded by remember { mutableStateOf(false) }
-    val backgroundColor = getTodoCardColor(todo.id)
-
-    Card(
-        modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(
-            containerColor = backgroundColor
-        )
+    Surface(
+        color = MaterialTheme.colorScheme.primary,
+        shadowElevation = 4.dp,
+        modifier = Modifier
+            .fillMaxWidth()
     ) {
-        Column(
+        Row(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp)
+                .height(64.dp) //toolbar height
+                .padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            // Main row with todo
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clickable { isExpanded = !isExpanded }, // Click to expand
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Checkbox(
-                        checked = todo.isCompleted, onCheckedChange = { onToggle() })
 
-                    Text(
-                        text = todo.title,
-                        modifier = Modifier.padding(start = 8.dp),
-                        style = if (todo.isCompleted) {
-                            MaterialTheme.typography.bodyLarge.copy(
-                                textDecoration = TextDecoration.LineThrough
-                            )
-                        } else {
-                            MaterialTheme.typography.bodyLarge
-                        }
-                    )
-                }
-                AssistChip(
-                    onClick = { },
+            Text(
+                text = stringResource(R.string.todo_list),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onPrimary,
+                modifier = Modifier.weight(1f)
+            )
 
-                    label = {
-                        Text(
-                            text = if (todo.isCompleted) "Completed" else "Pending",
-                            color = Color.Black
-                        )
-                    },
-
-                    modifier = Modifier,
-                    shape = RoundedCornerShape(12.dp),
-
-                    border = null,
-
-                    colors = AssistChipDefaults.assistChipColors(
-                        containerColor =
-                            if (todo.isCompleted)
-                                TodoColors.completed
-                            else
-                                TodoColors.pending
-                    ),
-                    elevation = AssistChipDefaults.assistChipElevation(
-                        elevation = 6.dp  // shadow
-                    )
+            IconButton(onClick = onSearchClick) {
+                Icon(
+                    imageVector = Icons.Default.Search,
+                    contentDescription = "Search",
+                    tint = MaterialTheme.colorScheme.onPrimary
                 )
             }
 
-            //  appears/disappears based on isExpanded state
-            if (isExpanded) {
-                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                if (!todo.description.isNullOrBlank()) {
-                    Text(
-                        text = "Description: ${todo.description}",
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.padding(start = 36.dp, bottom = 8.dp)
-                    )
-                }
-
+            TextButton(
+                onClick = onToggleCompleted,
+                contentPadding = PaddingValues(horizontal = 8.dp)
+            ) {
                 Text(
-                    text = "Status: ${if (todo.isCompleted) "✓ Completed" else "○ Pending"}",
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(start = 36.dp)
+                    text = if (showCompleted) "Hide Completed" else "Show All",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onPrimary
                 )
             }
         }
