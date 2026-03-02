@@ -4,6 +4,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import com.example.composebasics.data.Todo
 
 class AddTodoViewModel : ViewModel() {
 
@@ -17,6 +18,8 @@ class AddTodoViewModel : ViewModel() {
         private set
 
     var priority by mutableStateOf("Select Priority") // default
+        private set
+    var editingTodo: Todo? = null
         private set
 
     fun updateTaskName(name: String) {
@@ -37,5 +40,14 @@ class AddTodoViewModel : ViewModel() {
 
     fun isValid(): Boolean {
         return taskName.isNotBlank() && category != "Select Category"
+    }
+
+    fun setEditingTodo(todo: Todo) {
+        editingTodo = todo
+        // initialize fields with existing todo values
+        taskName = todo.title
+        description = todo.description ?: ""
+        category = todo.category
+        priority = todo.priority ?: "Select Priority"
     }
 }
