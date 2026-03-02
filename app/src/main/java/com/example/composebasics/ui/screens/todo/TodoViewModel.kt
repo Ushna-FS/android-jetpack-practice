@@ -50,4 +50,13 @@ class TodoViewModel : ViewModel() {
             todos.filter { it.id != id }
         }
     }
+    fun updateTodo(id: Int, title: String, category: String, description: String?, priority: String?) {
+        _todos.update { todos ->
+            todos.map { todo ->
+                if (todo.id == id) {
+                    todo.copy(title = title, category = category, description = description, priority = priority)
+                } else todo
+            }
+        }
+    }
 }

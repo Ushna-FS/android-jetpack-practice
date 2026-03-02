@@ -5,15 +5,19 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.composebasics.R
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import com.example.composebasics.data.Todo
 import com.example.composebasics.ui.components.SwipeToDeleteContainer
 import com.example.composebasics.ui.components.TodoItem
 
@@ -161,15 +165,18 @@ fun TodoScreen(
                         filteredTodos,
                         key = { it.id }
                     ) { todo ->
+                        val extraTopPadding = if (filteredTodos.indexOf(todo) == 0) 18.dp else 0.dp
 
                         SwipeToDeleteContainer(
                             item = todo,
                             onDelete = { viewModel.deleteTodo(it.id) }
                         ) { item ->
 
-                            TodoItem(
+                            EditableTodoItem(
                                 todo = item,
-                                onToggle = { viewModel.toggleTodo(item.id) }
+                                onToggle = { viewModel.toggleTodo(item.id) },
+                                navController = navController,
+                                modifier = Modifier.padding(top = extraTopPadding)
                             )
                         }
                     }
@@ -225,7 +232,71 @@ fun TodoTopBar(
         }
     }
 }
-//
+
+@Composable
+fun EditableTodoItem(
+    todo: Todo,
+    onToggle: () -> Unit,
+    navController: NavController,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp)
+    ) {
+
+        TodoItem(
+            todo = todo,
+            onToggle = onToggle
+        )
+
+        SmallFloatingActionButton(
+            onClick = {
+                navController.navigate("${TodoRoutes.ADD_TODO}/${todo.id}")
+            },
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .offset(x = 2.dp, y = (-18).dp)// overlap
+                .size(34.dp),
+            containerColor = MaterialTheme.colorScheme.primary,
+            elevation = FloatingActionButtonDefaults.elevation(6.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Edit,
+                contentDescription = "Edit Todo",
+                modifier = Modifier.size(16.dp) // small edit icon
+            )
+        }
+    }
+}
+
+//preview
+@Preview(showBackground = true)
+@Composable
+fun EditableTodoItemPreview() {
+
+    // Fake todo for preview
+    val sampleTodo = Todo(
+        id = 1,
+        title = "Buy groceries",
+        description = "Milk, Eggs, Bread",
+        isCompleted = false,
+        category = "Personal"
+    )
+
+    // Dummy NavController for preview
+    val navController = rememberNavController()
+
+    MaterialTheme {
+        EditableTodoItem(
+            todo = sampleTodo,
+            onToggle = {},
+            navController = navController
+        )
+    }
+}
+
 //@Preview(showBackground = true)
 //@Composable
 //fun TodoScreenPreview() {
