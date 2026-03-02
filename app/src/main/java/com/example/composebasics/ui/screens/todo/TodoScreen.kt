@@ -30,6 +30,18 @@ fun TodoScreen(
     // local statte that survives recomposition
     var showCompleted by remember { mutableStateOf(false) }
 
+    var selectedCategory by remember { mutableStateOf("All") }
+
+    val filteredTodos = todos
+        .filter { if (showCompleted) true else !it.isCompleted }
+        .filter {
+            when (selectedCategory) {
+                "Work" -> it.category == "Work"
+                "Personal" -> it.category == "Personal"
+                else -> true
+            }
+        }
+
     Scaffold(
         topBar = {
             TodoTopBar(
@@ -59,62 +71,107 @@ fun TodoScreen(
 
             // LazyColumn only composes items visible on screen + buffer
             Text(
-                stringResource(R.string.todo_text_count, todos.size),
+                stringResource(R.string.todo_text_count, filteredTodos.size),
                 style = MaterialTheme.typography.titleMedium
             )
 
             Spacer(modifier = Modifier.height(10.dp))
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxWidth()
             ) {
-                // Filter todos based on showCompleted state
-                val filteredTodos = if (showCompleted) {
-                    todos
-                } else {
-                    todos.filter { !it.isCompleted }
-                }
 
+                FilterChip(
+                    selected = selectedCategory == "All",
+                    onClick = { selectedCategory = "All" },
+                    label = { Text("All") }
+                )
 
-                items(
-                    filteredTodos,
-                    key = { todo -> todo.id }
-                ) { todo ->
+                FilterChip(
+                    selected = selectedCategory == "Work",
+                    onClick = { selectedCategory = "Work" },
+                    label = { Text("Work") }
+                )
 
-                    SwipeToDeleteContainer(
-                        item = todo,
-                        onDelete = { viewModel.deleteTodo(it.id) }
-                    ) { item ->
-                        TodoItem(
-                            todo = item,
-                            onToggle = { viewModel.toggleTodo(item.id) }
+                FilterChip(
+                    selected = selectedCategory == "Personal",
+                    onClick = { selectedCategory = "Personal" },
+                    label = { Text("Personal") }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+            //  conditional UI (recomposition demo)
+            if (todos.isEmpty()) {
+                // Default empty state
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+
+                        Text(
+                            text = "No tasks, add now",
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(bottom = 16.dp)
                         )
+
+                        Button(
+                            onClick = { navController.navigate(TodoRoutes.ADD_TODO) },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary
+                            )
+                        ) {
+                            Icon(Icons.Default.Add, contentDescription = null)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Add Task")
+                        }
                     }
                 }
-            }
-        }
-        //  conditional UI (recomposition demo)
-        if (todos.isEmpty()) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
 
+            } else if (filteredTodos.isEmpty()) {
+
+                val message = when (selectedCategory) {
+                    "Work" -> "No work related tasks"
+                    "Personal" -> "No personal tasks"
+                    else -> "No tasks available"
+                }
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 40.dp),
+                    contentAlignment = Alignment.Center
+                ) {
                     Text(
-                        text = "No tasks, add now",
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.padding(bottom = 16.dp)
+                        text = message,
+                        style = MaterialTheme.typography.titleMedium
                     )
+                }
 
-                    Button(
-                        onClick = { navController.navigate(TodoRoutes.ADD_TODO) },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary
-                        )
-                    ) {
-                        Icon(Icons.Default.Add, contentDescription = null)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Add Task")
+            } else {
+
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+
+                    items(
+                        filteredTodos,
+                        key = { it.id }
+                    ) { todo ->
+
+                        SwipeToDeleteContainer(
+                            item = todo,
+                            onDelete = { viewModel.deleteTodo(it.id) }
+                        ) { item ->
+
+                            TodoItem(
+                                todo = item,
+                                onToggle = { viewModel.toggleTodo(item.id) }
+                            )
+                        }
                     }
                 }
             }
@@ -131,8 +188,7 @@ fun TodoTopBar(
     Surface(
         color = MaterialTheme.colorScheme.primary,
         shadowElevation = 4.dp,
-        modifier = Modifier
-            .fillMaxWidth()
+        modifier = Modifier.fillMaxWidth()
     ) {
         Row(
             modifier = Modifier
@@ -161,7 +217,7 @@ fun TodoTopBar(
                 contentPadding = PaddingValues(horizontal = 8.dp)
             ) {
                 Text(
-                    text = if (showCompleted) "Hide Completed" else "Show All",
+                    text = if (showCompleted) "Hide Completed" else "Show Completed",
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onPrimary
                 )
