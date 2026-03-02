@@ -63,7 +63,7 @@ fun MainScreen() {
         ) {
 
             composable(BottomNavItem.Home.route) {
-                HomeScreen(todoViewModel)
+                HomeScreen(todoViewModel,navController)
             }
 
             composable(BottomNavItem.Todo.route) {
