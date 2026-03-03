@@ -147,7 +147,8 @@ fun HomeScreen(
                     ) {
                         TodoItem(
                             todo = todo,
-                            onToggle = { }
+                            onToggle = { },
+                            forceExpanded = false
                         )
                     }
                 }
@@ -207,7 +208,8 @@ fun PriorityTodoItem(
 
         TodoItem(
             todo = todo,
-            onToggle = onToggle
+            onToggle = onToggle,
+            forceExpanded = false
         )
 
         // Priority Chip

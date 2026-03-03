@@ -32,11 +32,13 @@ fun TodoScreen(
     // Collecting StateFlow as Compose State(recomposition trigger)
     val todos by viewModel.todos.collectAsState()
 
-
     // local statte that survives recomposition
     var showCompleted by remember { mutableStateOf(false) }
 
     var selectedCategory by remember { mutableStateOf("All") }
+
+    var isSearching by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
 
     val filteredTodos = todos
         .filter { if (showCompleted) true else !it.isCompleted }
@@ -47,12 +49,17 @@ fun TodoScreen(
                 else -> true
             }
         }
+        .filter { todo ->
+            searchQuery.isBlank() ||
+                    todo.title.contains(searchQuery, ignoreCase = true) ||
+                    (todo.description?.contains(searchQuery, ignoreCase = true) == true)
+        }
 
     Scaffold(
         topBar = {
             TodoTopBar(
                 showCompleted = showCompleted,
-                onSearchClick = {},
+                onSearchClick = { isSearching = !isSearching },
                 onToggleCompleted = { showCompleted = !showCompleted })
         },
         floatingActionButton = {
@@ -74,6 +81,18 @@ fun TodoScreen(
                 .padding(16.dp)
         ) {
             Spacer(modifier = Modifier.height(16.dp))
+            if (isSearching) {
+
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text(stringResource(R.string.search_placeholder)) },
+                    singleLine = true
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+            }
 
             // LazyColumn only composes items visible on screen + buffer
             Text(
@@ -173,12 +192,18 @@ fun TodoScreen(
                             item = todo,
                             onDelete = { viewModel.deleteTodo(it.id) }
                         ) { item ->
+                            val descriptionMatched = searchQuery.isNotBlank() &&
+                                    item.description?.contains(
+                                        searchQuery,
+                                        ignoreCase = true
+                                    ) == true
 
                             EditableTodoItem(
                                 todo = item,
                                 onToggle = { viewModel.toggleTodo(item.id) },
                                 navController = navController,
-                                modifier = Modifier.padding(top = extraTopPadding)
+                                modifier = Modifier.padding(top = extraTopPadding),
+                                forceExpanded = descriptionMatched
                             )
                         }
                     }
@@ -240,7 +265,8 @@ fun EditableTodoItem(
     todo: Todo,
     onToggle: () -> Unit,
     navController: NavController,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    forceExpanded: Boolean = false
 ) {
     Box(
         modifier = modifier
@@ -250,7 +276,8 @@ fun EditableTodoItem(
 
         TodoItem(
             todo = todo,
-            onToggle = onToggle
+            onToggle = onToggle,
+            forceExpanded = forceExpanded
         )
 
         SmallFloatingActionButton(
