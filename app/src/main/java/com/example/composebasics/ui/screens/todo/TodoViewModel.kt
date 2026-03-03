@@ -1,17 +1,20 @@
 package com.example.composebasics.ui.screens.todo
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.composebasics.data.Todo
-import kotlinx.coroutines.flow.MutableStateFlow
+import com.example.composebasics.data.TodoRepository
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
-class TodoViewModel : ViewModel() {
+class TodoViewModel(
+    private val repository: TodoRepository
+) : ViewModel() {
 
-    private val _todos = MutableStateFlow<List<Todo>>(emptyList())
-
-    val todos: StateFlow<List<Todo>> = _todos.asStateFlow()
+    val todos: StateFlow<List<Todo>> = repository.todos
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     fun addTodo(
         title: String,
@@ -20,43 +23,51 @@ class TodoViewModel : ViewModel() {
         priority: String?
     ) {
         if (title.isNotBlank() && category.isNotBlank()) {
-
             val newTodo = Todo(
-                id = (_todos.value.maxOfOrNull { it.id } ?: 0) + 1,
+                id = 0,
                 title = title,
                 category = category,
                 description = description,
-                priority = priority
+                priority = priority,
+                isCompleted = false
             )
+            viewModelScope.launch {
+                repository.addTodo(newTodo)
+            }
+        }
+    }
 
-            _todos.update { currentList -> currentList + newTodo }
+    fun updateTodo(
+        id: Int,
+        title: String,
+        category: String,
+        description: String?,
+        priority: String?
+    ) {
+        viewModelScope.launch {
+            val todo = todos.value.find { it.id == id } ?: return@launch
+            repository.updateTodo(
+                todo.copy(
+                    title = title,
+                    category = category,
+                    description = description,
+                    priority = priority
+                )
+            )
+        }
+    }
+    fun deleteTodo(id: Int) {
+        viewModelScope.launch {
+            val todo = todos.value.find { it.id == id } ?: return@launch
+            repository.deleteTodo(todo)
         }
     }
 
     fun toggleTodo(id: Int) {
-        _todos.update { todos ->
-            todos.map { todo ->
-                if (todo.id == id) {
-                    todo.copy(isCompleted = !todo.isCompleted) // Immutable update
-                } else {
-                    todo
-                }
-            }
-        }
-    }
-
-    fun deleteTodo(id: Int) {
-        _todos.update { todos ->
-            todos.filter { it.id != id }
-        }
-    }
-    fun updateTodo(id: Int, title: String, category: String, description: String?, priority: String?) {
-        _todos.update { todos ->
-            todos.map { todo ->
-                if (todo.id == id) {
-                    todo.copy(title = title, category = category, description = description, priority = priority)
-                } else todo
-            }
+        viewModelScope.launch {
+            val todo = todos.value.find { it.id == id } ?: return@launch
+            val updatedTodo = todo.copy(isCompleted = !todo.isCompleted)
+            repository.updateTodo(updatedTodo)
         }
     }
 }

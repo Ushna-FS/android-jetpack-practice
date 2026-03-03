@@ -1,14 +1,14 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
-    id("org.jetbrains.kotlin.plugin.serialization") version "2.3.10"
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.2.10"
+    id("com.google.devtools.ksp")
 }
 
 android {
     namespace = "com.example.composebasics"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 36
+
 
     defaultConfig {
         applicationId = "com.example.composebasics"
@@ -64,4 +64,9 @@ dependencies {
 
     // ViewModel
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+
+    //Room DB
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
 }

@@ -18,9 +18,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.composebasics.ui.components.DropdownSelector
@@ -32,10 +29,10 @@ fun AddTodoScreen(
     onSave: () -> Unit,
     onCancel: () -> Unit
 ) {
-    val taskName by remember { derivedStateOf { addTodoViewModel.taskName } }
-    val description by remember { derivedStateOf { addTodoViewModel.description } }
-    val category by remember { derivedStateOf { addTodoViewModel.category } }
-    val priority by remember { derivedStateOf { addTodoViewModel.priority } }
+    val taskName = addTodoViewModel.taskName
+    val description = addTodoViewModel.description
+    val category = addTodoViewModel.category
+    val priority = addTodoViewModel.priority
 
     Scaffold(
         topBar = {

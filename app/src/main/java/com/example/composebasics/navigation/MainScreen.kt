@@ -1,6 +1,5 @@
 package com.example.composebasics.navigation
 
-
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -17,11 +16,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.navigation.toRoute
 
 @Composable
-fun MainScreen() {
+fun MainScreen(
+    todoViewModel: TodoViewModel
+) {
 
     val navController = rememberNavController()
-    val todoViewModel: TodoViewModel = viewModel()
-
 
     val items = listOf(
         BottomNavItem.HomeItem, BottomNavItem.TodoItem
@@ -106,17 +105,17 @@ fun MainScreen() {
                     }
                 )
             }
-
             composable<EditTodo> { backStackEntry ->
 
                 val route = backStackEntry.toRoute<EditTodo>()
                 val todoId = route.todoId
+
                 val addTodoViewModel: AddTodoViewModel = viewModel()
 
-                // Find the todo from the ViewModel
-                val editTodo = todoViewModel.todos.collectAsState().value.find { it.id == todoId }
+                val editTodo = todoViewModel.todos.collectAsState().value.find {
+                    it.id == todoId
+                }
 
-                // Initialize AddTodoViewModel with existing todo values if editing
                 LaunchedEffect(editTodo) {
                     editTodo?.let { addTodoViewModel.setEditingTodo(it) }
                 }
