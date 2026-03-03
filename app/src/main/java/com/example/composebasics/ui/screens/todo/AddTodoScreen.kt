@@ -25,10 +25,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.composebasics.ui.components.DropdownSelector
 
-object TodoRoutes {
-    const val ADD_TODO = "add_todo"
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddTodoScreen(

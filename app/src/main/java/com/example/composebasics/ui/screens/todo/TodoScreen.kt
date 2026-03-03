@@ -18,6 +18,8 @@ import com.example.composebasics.R
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.composebasics.data.Todo
+import com.example.composebasics.navigation.AddTodo
+import com.example.composebasics.navigation.EditTodo
 import com.example.composebasics.ui.components.SwipeToDeleteContainer
 import com.example.composebasics.ui.components.TodoItem
 
@@ -56,7 +58,7 @@ fun TodoScreen(
         floatingActionButton = {
             if (todos.isNotEmpty()) {
                 FloatingActionButton(
-                    onClick = { navController.navigate(TodoRoutes.ADD_TODO) },
+                    onClick = { navController.navigate(AddTodo) },
                     containerColor = MaterialTheme.colorScheme.primary
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "Add Task")
@@ -122,7 +124,7 @@ fun TodoScreen(
                         )
 
                         Button(
-                            onClick = { navController.navigate(TodoRoutes.ADD_TODO) },
+                            onClick = { navController.navigate(AddTodo) },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.primary
                             )
@@ -253,7 +255,7 @@ fun EditableTodoItem(
 
         SmallFloatingActionButton(
             onClick = {
-                navController.navigate("${TodoRoutes.ADD_TODO}/${todo.id}")
+                navController.navigate(EditTodo(todo.id))
             },
             modifier = Modifier
                 .align(Alignment.TopStart)

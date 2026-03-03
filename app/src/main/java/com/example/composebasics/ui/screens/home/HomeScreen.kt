@@ -17,9 +17,9 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.composebasics.R
 import com.example.composebasics.data.Todo
+import com.example.composebasics.navigation.AddTodo
 import com.example.composebasics.ui.components.SwipeToDeleteContainer
 import com.example.composebasics.ui.components.TodoItem
-import com.example.composebasics.ui.screens.todo.TodoRoutes
 import com.example.composebasics.ui.screens.todo.TodoViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -44,7 +44,7 @@ fun HomeScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { navController.navigate(TodoRoutes.ADD_TODO) },
+                onClick = { navController.navigate(AddTodo) },
                 containerColor = MaterialTheme.colorScheme.primary
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Add Task")

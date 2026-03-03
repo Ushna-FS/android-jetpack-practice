@@ -7,18 +7,18 @@ import androidx.compose.material.icons.filled.List
 import androidx.compose.ui.graphics.vector.ImageVector
 
 sealed class BottomNavItem(
-    val route: String,
+    val route: Any,
     val title: String,
     val icon: ImageVector
 ) {
-    object Home : BottomNavItem(
-        route = "home",
+    object HomeItem : BottomNavItem(
+        route = Home,
         title = "Home",
         icon = Icons.Default.Home
     )
 
-    object Todo : BottomNavItem(
-        route = "todo",
+    object TodoItem : BottomNavItem(
+        route = Todo,
         title = "Todos",
         icon = Icons.Default.List
     )
