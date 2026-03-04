@@ -16,6 +16,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,10 +32,14 @@ import com.example.composebasics.ui.theme.getTodoCardColor
 
 @Composable
 fun TodoItem(
-    todo: Todo, onToggle: () -> Unit
+    todo: Todo, onToggle: () -> Unit, forceExpanded: Boolean = false
 ) {
     // This state is forr specific todo item
     var isExpanded by remember { mutableStateOf(false) }
+    LaunchedEffect(forceExpanded) {
+        if (forceExpanded) isExpanded = true
+    }
+
     val backgroundColor = getTodoCardColor(todo.id)
 
     Card(

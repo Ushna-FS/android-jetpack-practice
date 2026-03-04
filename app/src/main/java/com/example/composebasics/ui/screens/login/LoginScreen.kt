@@ -6,26 +6,29 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.*
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.composebasics.R
 
 @Composable
-fun LoginScreen(
-    onLoginSuccess: () -> Unit
+fun LoginScreenContent(
+    uiState: LoginUiState,
+    onEmailChange: (String) -> Unit,
+    onPasswordChange: (String) -> Unit,
+    onLoginClick: (String, String) -> Unit,
+    onGuestClick: () -> Unit
 ) {
-    val viewModel: LoginViewModel = viewModel()
-
-    val uiState by viewModel.uiState.collectAsState()
 
     Box {
         Scaffold { paddingValues ->
-            Box (
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
-            ){
+            ) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -35,7 +38,7 @@ fun LoginScreen(
                     verticalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = "Login",
+                        text = stringResource(R.string.login_txt),
                         style = MaterialTheme.typography.headlineLarge
                     )
 
@@ -44,8 +47,8 @@ fun LoginScreen(
                     // Email field - using uiState.email
                     OutlinedTextField(
                         value = uiState.email,
-                        onValueChange = viewModel::updateEmail,
-                        label = { Text("Email") },
+                        onValueChange = onEmailChange,
+                        label = { Text(stringResource(R.string.email)) },
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Email,
                             imeAction = ImeAction.Next
@@ -59,8 +62,8 @@ fun LoginScreen(
                     // Password field - using uiState.password
                     OutlinedTextField(
                         value = uiState.password,
-                        onValueChange = viewModel::updatePassword,
-                        label = { Text("Password") },
+                        onValueChange = onPasswordChange,
+                        label = { Text(stringResource(R.string.password)) },
                         visualTransformation = PasswordVisualTransformation(),
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Password,
@@ -81,11 +84,16 @@ fun LoginScreen(
 
                     Spacer(Modifier.height(32.dp))
 
+                    val fillAllFieldsMsg = stringResource(R.string.fill_all_fields)
+                    val invalidEmailMsg = stringResource(R.string.invalid_email)
                     // Login button
                     Button(
-                        onClick = { viewModel.login(onLoginSuccess) },
+                        onClick = {
+                            onLoginClick(fillAllFieldsMsg, invalidEmailMsg)
+                        },
                         modifier = Modifier.fillMaxWidth(),
                         enabled = !uiState.isLoading
+
                     ) {
                         if (uiState.isLoading) {
                             CircularProgressIndicator(
@@ -94,7 +102,7 @@ fun LoginScreen(
                                 strokeWidth = 2.dp
                             )
                         } else {
-                            Text("Login")
+                            Text(stringResource(R.string.login_txt))
                         }
                     }
 
@@ -102,18 +110,53 @@ fun LoginScreen(
             }
         }
         TextButton(
-            onClick = onLoginSuccess,
+            onClick = onGuestClick,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(0.dp,0.dp,20.dp,80.dp)
+                .padding(0.dp, 0.dp, 20.dp, 80.dp)
         ) {
-            Text("Continue as Guest")
+            Text(stringResource(R.string.guest_btn))
         }
     }
 }
 
-@Preview
 @Composable
-fun PreviewLogin(){
-    LoginScreen {  }
+fun LoginScreen(
+    onLoginSuccess: () -> Unit
+) {
+
+    val viewModel: LoginViewModel = viewModel()
+
+    val uiState by viewModel.uiState.collectAsState()
+
+    LoginScreenContent(
+        uiState = uiState,
+        onEmailChange = viewModel::updateEmail,
+        onPasswordChange = viewModel::updatePassword,
+        onLoginClick = { fillMsg, invalidMsg ->
+            viewModel.login(
+                onLoginSuccess,
+                fillAllFieldsMsg = fillMsg,
+                invalidEmailMsg = invalidMsg
+            )
+        },
+        onGuestClick = onLoginSuccess
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewLogin() {
+    LoginScreenContent(
+        uiState = LoginUiState(
+            email = "",
+            password = "",
+            isLoading = false,
+            error = null
+        ),
+        onEmailChange = {},
+        onPasswordChange = {},
+        onLoginClick = { _, _ -> },
+        onGuestClick = {}
+    )
 }

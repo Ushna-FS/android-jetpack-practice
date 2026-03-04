@@ -1,32 +1,29 @@
 package com.example.composebasics.navigation
 
-
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavType
 import androidx.navigation.compose.*
-import androidx.navigation.navArgument
 import com.example.composebasics.ui.screens.home.HomeScreen
 import com.example.composebasics.ui.screens.todo.AddTodoScreen
 import com.example.composebasics.ui.screens.todo.AddTodoViewModel
-import com.example.composebasics.ui.screens.todo.TodoRoutes
 import com.example.composebasics.ui.screens.todo.TodoScreen
 import com.example.composebasics.ui.screens.todo.TodoViewModel
 import androidx.compose.runtime.collectAsState
+import androidx.navigation.toRoute
 
 @Composable
-fun MainScreen() {
+fun MainScreen(
+    todoViewModel: TodoViewModel
+) {
 
     val navController = rememberNavController()
-    val todoViewModel: TodoViewModel = viewModel()
-
 
     val items = listOf(
-        BottomNavItem.Home, BottomNavItem.Todo
+        BottomNavItem.HomeItem, BottomNavItem.TodoItem
     )
 
     Scaffold(
@@ -34,17 +31,24 @@ fun MainScreen() {
 
             NavigationBar {
 
-                val currentRoute =
-                    navController.currentBackStackEntryAsState().value?.destination?.route
+                val navBackStackEntry = navController.currentBackStackEntryAsState()
+                val currentDestination = navBackStackEntry.value?.destination
+
 
                 items.forEach { item ->
 
                     NavigationBarItem(
-                        selected = currentRoute == item.route,
+                        selected =
+                            when (item) {
+                                BottomNavItem.HomeItem ->
+                                    currentDestination?.route?.contains("Home") == true
 
+                                BottomNavItem.TodoItem ->
+                                    currentDestination?.route?.contains("Todo") == true
+                            },
                         onClick = {
                             navController.navigate(item.route) {
-                                popUpTo("home")
+                                popUpTo<Home>()
                                 launchSingleTop = true
                             }
                         },
@@ -62,21 +66,21 @@ fun MainScreen() {
 
         NavHost(
             navController = navController,
-            startDestination = BottomNavItem.Home.route,
+            startDestination = Home,
             modifier = Modifier.padding(padding)
         ) {
 
-            composable(BottomNavItem.Home.route) {
+            composable<Home> {
                 HomeScreen(todoViewModel, navController)
             }
 
-            composable(BottomNavItem.Todo.route) {
+            composable<Todo> {
                 TodoScreen(
                     navController = navController,
                     viewModel = todoViewModel
                 )
             }
-            composable(TodoRoutes.ADD_TODO) {
+            composable<AddTodo> {
 
                 val addTodoViewModel: AddTodoViewModel = viewModel()
 
@@ -96,24 +100,22 @@ fun MainScreen() {
                             navController.popBackStack()
                         }
                     },
-
                     onCancel = {
                         navController.popBackStack()
                     }
                 )
             }
+            composable<EditTodo> { backStackEntry ->
 
-            composable(
-                route = "${TodoRoutes.ADD_TODO}/{todoId}",
-                arguments = listOf(navArgument("todoId") { type = NavType.IntType })
-            ) { backStackEntry ->
-                val todoId = backStackEntry.arguments?.getInt("todoId")
+                val route = backStackEntry.toRoute<EditTodo>()
+                val todoId = route.todoId
+
                 val addTodoViewModel: AddTodoViewModel = viewModel()
 
-                // Find the todo from the ViewModel
-                val editTodo = todoViewModel.todos.collectAsState().value.find { it.id == todoId }
+                val editTodo = todoViewModel.todos.collectAsState().value.find {
+                    it.id == todoId
+                }
 
-                // Initialize AddTodoViewModel with existing todo values if editing
                 LaunchedEffect(editTodo) {
                     editTodo?.let { addTodoViewModel.setEditingTodo(it) }
                 }

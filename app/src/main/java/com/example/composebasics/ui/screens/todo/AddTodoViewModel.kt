@@ -8,19 +8,21 @@ import com.example.composebasics.data.Todo
 
 class AddTodoViewModel : ViewModel() {
 
+    private val defaultCategory = ""
+    private val defaultPriority = ""
     var taskName by mutableStateOf("")
-        private set
+    private set
 
     var description by mutableStateOf("")
-        private set
+    private set
 
-    var category by mutableStateOf("Select Category") // default
-        private set
+    var category by mutableStateOf(defaultCategory) // default
+    private set
 
-    var priority by mutableStateOf("Select Priority") // default
-        private set
+    var priority by mutableStateOf(defaultPriority) // default
+    private set
     var editingTodo: Todo? = null
-        private set
+    private set
 
     fun updateTaskName(name: String) {
         taskName = name
@@ -39,7 +41,7 @@ class AddTodoViewModel : ViewModel() {
     }
 
     fun isValid(): Boolean {
-        return taskName.isNotBlank() && category != "Select Category"
+        return taskName.isNotBlank() && category != defaultCategory
     }
 
     fun setEditingTodo(todo: Todo) {
@@ -48,6 +50,6 @@ class AddTodoViewModel : ViewModel() {
         taskName = todo.title
         description = todo.description ?: ""
         category = todo.category
-        priority = todo.priority ?: "Select Priority"
+        priority = todo.priority ?: defaultPriority
     }
 }

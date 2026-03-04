@@ -29,7 +29,11 @@ class LoginViewModel : ViewModel() {
         _uiState.update { it.copy(password = password, error = null) }
     }
 
-    fun login(onSuccess: () -> Unit) = viewModelScope.launch {
+    fun login(
+        onSuccess: () -> Unit,
+        fillAllFieldsMsg: String,
+        invalidEmailMsg: String
+    ) = viewModelScope.launch {
         // Start loading
         _uiState.update { it.copy(isLoading = true, error = null) }
 
@@ -39,13 +43,15 @@ class LoginViewModel : ViewModel() {
         val isValid = uiState.value.run {
             when {
                 email.isEmpty() || password.isEmpty() -> {
-                    _uiState.update { it.copy(error = "Fill all fields") }
+                    _uiState.update { it.copy(error = fillAllFieldsMsg) }
                     false
                 }
+
                 !email.contains("@") -> {
-                    _uiState.update { it.copy(error = "Invalid email") }
+                    _uiState.update { it.copy(error = invalidEmailMsg) }
                     false
                 }
+
                 else -> true
             }
         }

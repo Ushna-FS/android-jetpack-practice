@@ -13,41 +13,56 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.composebasics.R
 import com.example.composebasics.data.Todo
+import com.example.composebasics.navigation.AddTodo
 import com.example.composebasics.ui.components.SwipeToDeleteContainer
 import com.example.composebasics.ui.components.TodoItem
-import com.example.composebasics.ui.screens.todo.TodoRoutes
 import com.example.composebasics.ui.screens.todo.TodoViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(
+fun HomeScreen( //stateful
     viewModel: TodoViewModel,
-    navController: NavController,
+    navController: NavController
 ) {
 
     val todos by viewModel.todos.collectAsState()
+
+    HomeScreenContent(
+        todos = todos,
+        onAddClick = { navController.navigate(AddTodo) },
+        onDelete = { viewModel.deleteTodo(it.id) },
+        onToggle = { viewModel.toggleTodo(it) }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun HomeScreenContent( //stateless
+    todos: List<Todo>,
+    onAddClick: () -> Unit,
+    onDelete: (Todo) -> Unit,
+    onToggle: (Int) -> Unit
+) {
 
     val priorityTodos = todos.filter {
         !it.isCompleted && it.priority?.lowercase() in listOf("high", "medium")
     }
     val recentlyCompleted = todos
         .filter { it.isCompleted }
-        .takeLast(3) // show latest 3 completed
+        .takeLast(3)
 
     Scaffold(
-        topBar = {
-            HomeTopBar()
-        },
+        topBar = { HomeTopBar() },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { navController.navigate(TodoRoutes.ADD_TODO) },
+                onClick = onAddClick,
                 containerColor = MaterialTheme.colorScheme.primary
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Add Task")
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.ic_add_desc))
 
             }
         }
@@ -60,7 +75,7 @@ fun HomeScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "No tasks yet.\nTap ' + ' to add one",
+                    text = stringResource(R.string.no_tasks),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
 
@@ -79,7 +94,7 @@ fun HomeScreen(
             item {
                 Spacer(modifier = Modifier.height(20.dp))
                 Text(
-                    text = "PRIORITY TASKS",
+                    text = stringResource(R.string.priority_tasks),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -93,7 +108,7 @@ fun HomeScreen(
                         )
                     ) {
                         Text(
-                            text = "No high priority tasks yet",
+                            text = stringResource(R.string.no_priority),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -103,11 +118,11 @@ fun HomeScreen(
                 items(priorityTodos, key = { it.id }) { todo ->
                     SwipeToDeleteContainer(
                         item = todo,
-                        onDelete = { viewModel.deleteTodo(it.id) }
+                        onDelete = onDelete
                     ) { item ->
                         PriorityTodoItem(
                             todo = item,
-                            onToggle = { viewModel.toggleTodo(item.id) }
+                            onToggle = { onToggle(item.id) }
                         )
                     }
                 }
@@ -117,7 +132,7 @@ fun HomeScreen(
             item {
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = "RECENTLY COMPLETED",
+                    text = stringResource(R.string.recently_completed),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -131,7 +146,7 @@ fun HomeScreen(
                         )
                     ) {
                         Text(
-                            text = "You need to complete a task",
+                            text = stringResource(R.string.complete_txt),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -147,13 +162,33 @@ fun HomeScreen(
                     ) {
                         TodoItem(
                             todo = todo,
-                            onToggle = { }
+                            onToggle = { },
+                            forceExpanded = false
                         )
                     }
                 }
             }
         }
     }
+}
+
+//previewing
+@Preview(showBackground = true)
+@Composable
+fun HomeScreenPreview() {
+
+    val sampleTodos = listOf(
+        Todo(1, "Buy groceries", "Personal", priority = "High"),
+        Todo(2, "Finish assignment", "Work", priority = "Medium"),
+        Todo(3, "Read book", "Personal", isCompleted = true)
+    )
+
+    HomeScreenContent(
+        todos = sampleTodos,
+        onAddClick = {},
+        onDelete = {},
+        onToggle = {}
+    )
 }
 
 @Composable
@@ -176,7 +211,7 @@ fun HomeTopBar() {
             ) {
                 Icon(
                     painter = painterResource(R.drawable.tasks),
-                    contentDescription = "Tasks Icon",
+                    contentDescription = stringResource(R.string.ic_task_desc),
                     tint = MaterialTheme.colorScheme.onPrimary
                 )
             }
@@ -207,7 +242,8 @@ fun PriorityTodoItem(
 
         TodoItem(
             todo = todo,
-            onToggle = onToggle
+            onToggle = onToggle,
+            forceExpanded = false
         )
 
         // Priority Chip
