@@ -14,20 +14,21 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.composebasics.R
 
 @Composable
-fun LoginScreen(
-    onLoginSuccess: () -> Unit
+fun LoginScreenContent(
+    uiState: LoginUiState,
+    onEmailChange: (String) -> Unit,
+    onPasswordChange: (String) -> Unit,
+    onLoginClick: (String, String) -> Unit,
+    onGuestClick: () -> Unit
 ) {
-    val viewModel: LoginViewModel = viewModel()
-
-    val uiState by viewModel.uiState.collectAsState()
 
     Box {
         Scaffold { paddingValues ->
-            Box (
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
-            ){
+            ) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -46,7 +47,7 @@ fun LoginScreen(
                     // Email field - using uiState.email
                     OutlinedTextField(
                         value = uiState.email,
-                        onValueChange = viewModel::updateEmail,
+                        onValueChange = onEmailChange,
                         label = { Text(stringResource(R.string.email)) },
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Email,
@@ -61,7 +62,7 @@ fun LoginScreen(
                     // Password field - using uiState.password
                     OutlinedTextField(
                         value = uiState.password,
-                        onValueChange = viewModel::updatePassword,
+                        onValueChange = onPasswordChange,
                         label = { Text(stringResource(R.string.password)) },
                         visualTransformation = PasswordVisualTransformation(),
                         keyboardOptions = KeyboardOptions(
@@ -87,10 +88,9 @@ fun LoginScreen(
                     val invalidEmailMsg = stringResource(R.string.invalid_email)
                     // Login button
                     Button(
-                        onClick = { viewModel.login(
-                            onLoginSuccess,
-                            fillAllFieldsMsg = fillAllFieldsMsg,
-                            invalidEmailMsg = invalidEmailMsg) },
+                        onClick = {
+                            onLoginClick(fillAllFieldsMsg, invalidEmailMsg)
+                        },
                         modifier = Modifier.fillMaxWidth(),
                         enabled = !uiState.isLoading
 
@@ -102,7 +102,7 @@ fun LoginScreen(
                                 strokeWidth = 2.dp
                             )
                         } else {
-                            Text(stringResource( R.string.login_txt))
+                            Text(stringResource(R.string.login_txt))
                         }
                     }
 
@@ -110,7 +110,7 @@ fun LoginScreen(
             }
         }
         TextButton(
-            onClick = onLoginSuccess,
+            onClick = onGuestClick,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(0.dp, 0.dp, 20.dp, 80.dp)
@@ -120,8 +120,43 @@ fun LoginScreen(
     }
 }
 
-@Preview
 @Composable
-fun PreviewLogin(){
-    LoginScreen {  }
+fun LoginScreen(
+    onLoginSuccess: () -> Unit
+) {
+
+    val viewModel: LoginViewModel = viewModel()
+
+    val uiState by viewModel.uiState.collectAsState()
+
+    LoginScreenContent(
+        uiState = uiState,
+        onEmailChange = viewModel::updateEmail,
+        onPasswordChange = viewModel::updatePassword,
+        onLoginClick = { fillMsg, invalidMsg ->
+            viewModel.login(
+                onLoginSuccess,
+                fillAllFieldsMsg = fillMsg,
+                invalidEmailMsg = invalidMsg
+            )
+        },
+        onGuestClick = onLoginSuccess
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewLogin() {
+    LoginScreenContent(
+        uiState = LoginUiState(
+            email = "",
+            password = "",
+            isLoading = false,
+            error = null
+        ),
+        onEmailChange = {},
+        onPasswordChange = {},
+        onLoginClick = { _, _ -> },
+        onGuestClick = {}
+    )
 }

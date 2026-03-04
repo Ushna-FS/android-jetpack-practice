@@ -11,12 +11,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.composebasics.R
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.composebasics.data.Todo
 import com.example.composebasics.navigation.AddTodo
 import com.example.composebasics.navigation.EditTodo
@@ -24,25 +24,25 @@ import com.example.composebasics.ui.components.SwipeToDeleteContainer
 import com.example.composebasics.ui.components.TodoItem
 
 @Composable
-fun TodoScreen(
+fun TodoScreenContent(
     navController: NavController,
-    viewModel: TodoViewModel
+    todos: List<Todo>,
+    showCompleted: Boolean,
+    selectedCategory: String,
+    isSearching: Boolean,
+    searchQuery: String,
+    onSearchToggle: () -> Unit,
+    onCompletedToggle: () -> Unit,
+    onCategorySelected: (String) -> Unit,
+    onSearchQueryChange: (String) -> Unit,
+    onAddClick: () -> Unit,
+    onDelete: (Todo) -> Unit,
+    onToggle: (Int) -> Unit
 ) {
 
-    // Collecting StateFlow as Compose State(recomposition trigger)
-    val todos by viewModel.todos.collectAsState()
-
-    // local state that survives recomposition
-    var showCompleted by remember { mutableStateOf(false) }
     val categoryAll = stringResource(R.string.all)
     val categoryPersonal = stringResource(R.string.personal)
     val categoryWork = stringResource(R.string.work)
-
-    var selectedCategory by remember { mutableStateOf(categoryAll) }
-
-    var isSearching by remember { mutableStateOf(false) }
-    var searchQuery by remember { mutableStateOf("") }
-
     val filteredTodos = todos
         .filter { if (showCompleted) true else !it.isCompleted }
         .filter {
@@ -62,13 +62,14 @@ fun TodoScreen(
         topBar = {
             TodoTopBar(
                 showCompleted = showCompleted,
-                onSearchClick = { isSearching = !isSearching },
-                onToggleCompleted = { showCompleted = !showCompleted })
+                onSearchClick = onSearchToggle,
+                onToggleCompleted = onCompletedToggle
+            )
         },
         floatingActionButton = {
             if (todos.isNotEmpty()) {
                 FloatingActionButton(
-                    onClick = { navController.navigate(AddTodo) },
+                    onClick = onAddClick,
                     containerColor = MaterialTheme.colorScheme.primary
                 ) {
                     Icon(
@@ -91,7 +92,7 @@ fun TodoScreen(
 
                 OutlinedTextField(
                     value = searchQuery,
-                    onValueChange = { searchQuery = it },
+                    onValueChange = onSearchQueryChange,
                     modifier = Modifier.fillMaxWidth(),
                     placeholder = { Text(stringResource(R.string.search_placeholder)) },
                     singleLine = true
@@ -115,19 +116,19 @@ fun TodoScreen(
 
                 FilterChip(
                     selected = selectedCategory == categoryAll,
-                    onClick = { selectedCategory = categoryAll },
+                    onClick = { onCategorySelected(categoryAll) },
                     label = { Text(stringResource(R.string.all)) }
                 )
 
                 FilterChip(
                     selected = selectedCategory == categoryWork,
-                    onClick = { selectedCategory = categoryWork },
+                    onClick = { onCategorySelected(categoryWork) },
                     label = { Text(stringResource(R.string.work)) }
                 )
 
                 FilterChip(
                     selected = selectedCategory == categoryPersonal,
-                    onClick = { selectedCategory = categoryPersonal },
+                    onClick = { onCategorySelected(categoryPersonal) },
                     label = { Text(stringResource(R.string.personal)) }
                 )
             }
@@ -149,7 +150,7 @@ fun TodoScreen(
                         )
 
                         Button(
-                            onClick = { navController.navigate(AddTodo) },
+                            onClick = onAddClick,
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.primary
                             )
@@ -196,7 +197,7 @@ fun TodoScreen(
 
                         SwipeToDeleteContainer(
                             item = todo,
-                            onDelete = { viewModel.deleteTodo(it.id) }
+                            onDelete = onDelete
                         ) { item ->
                             val descriptionMatched = searchQuery.isNotBlank() &&
                                     item.description?.contains(
@@ -206,7 +207,7 @@ fun TodoScreen(
 
                             EditableTodoItem(
                                 todo = item,
-                                onToggle = { viewModel.toggleTodo(item.id) },
+                                onToggle = { onToggle(item.id) },
                                 navController = navController,
                                 modifier = Modifier.padding(top = extraTopPadding),
                                 forceExpanded = descriptionMatched
@@ -217,6 +218,67 @@ fun TodoScreen(
             }
         }
     }
+}
+
+@Composable
+fun TodoScreen(
+    navController: NavController,
+    viewModel: TodoViewModel
+) {
+
+    // Collecting StateFlow as Compose State(recomposition trigger)
+    val todos by viewModel.todos.collectAsState()
+
+    // local state that survives recomposition
+    var showCompleted by remember { mutableStateOf(false) }
+    val categoryAll = stringResource(R.string.all)
+
+    var selectedCategory by remember { mutableStateOf(categoryAll) }
+
+    var isSearching by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
+
+    TodoScreenContent(
+        todos = todos,
+        showCompleted = showCompleted,
+        selectedCategory = selectedCategory,
+        isSearching = isSearching,
+        searchQuery = searchQuery,
+        onSearchToggle = { isSearching = !isSearching },
+        onCompletedToggle = { showCompleted = !showCompleted },
+        onCategorySelected = { selectedCategory = it },
+        onSearchQueryChange = { searchQuery = it },
+        onAddClick = { navController.navigate(AddTodo) },
+        onDelete = { viewModel.deleteTodo(it.id) },
+        onToggle = { viewModel.toggleTodo(it) },
+        navController = navController
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewTodoScreen() {
+
+    val sampleTodos = listOf(
+        Todo(1, "Buy groceries", "Personal", "Milk and eggs"),
+        Todo(2, "Office meeting", "Work", "Discuss project")
+    )
+
+    TodoScreenContent(
+        todos = sampleTodos,
+        showCompleted = false,
+        selectedCategory = "All",
+        isSearching = false,
+        searchQuery = "",
+        onSearchToggle = {},
+        onCompletedToggle = {},
+        onCategorySelected = {},
+        onSearchQueryChange = {},
+        onAddClick = {},
+        onDelete = {},
+        onToggle = {},
+        navController = NavController(LocalContext.current)
+    )
 }
 
 @Composable
@@ -307,35 +369,3 @@ fun EditableTodoItem(
         }
     }
 }
-
-//preview
-@Preview(showBackground = true)
-@Composable
-fun EditableTodoItemPreview() {
-
-    // Fake todo for preview
-    val sampleTodo = Todo(
-        id = 1,
-        title = "Buy groceries",
-        description = "Milk, Eggs, Bread",
-        isCompleted = false,
-        category = "Personal"
-    )
-
-    // Dummy NavController for preview
-    val navController = rememberNavController()
-
-    MaterialTheme {
-        EditableTodoItem(
-            todo = sampleTodo,
-            onToggle = {},
-            navController = navController
-        )
-    }
-}
-
-//@Preview(showBackground = true)
-//@Composable
-//fun TodoScreenPreview() {
-//    TodoScreen()
-//}

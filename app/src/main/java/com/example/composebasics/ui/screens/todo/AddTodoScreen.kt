@@ -20,21 +20,26 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.composebasics.R
 import com.example.composebasics.ui.components.DropdownSelector
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddTodoScreen(
-    addTodoViewModel: AddTodoViewModel,
+fun AddTodoScreenContent(
+    taskName: String,
+    description: String,
+    category: String,
+    priority: String,
+    isValid: Boolean,
+    onTaskNameChange: (String) -> Unit,
+    onDescriptionChange: (String) -> Unit,
+    onCategorySelected: (String) -> Unit,
+    onPrioritySelected: (String) -> Unit,
     onSave: () -> Unit,
     onCancel: () -> Unit
 ) {
-    val taskName = addTodoViewModel.taskName
-    val description = addTodoViewModel.description
-    val category = addTodoViewModel.category
-    val priority = addTodoViewModel.priority
     val defaultCategory = stringResource(R.string.select_category)
     val defaultPriority = stringResource(R.string.select_priority)
 
@@ -52,12 +57,8 @@ fun AddTodoScreen(
                 },
                 actions = {
                     TextButton(
-                        onClick = {
-                            if (addTodoViewModel.isValid()) {
-                                onSave()
-                            }
-                        },
-                        enabled = addTodoViewModel.isValid()
+                        onClick = onSave,
+                        enabled = isValid
                     ) {
                         Text(stringResource(R.string.save))
                     }
@@ -74,7 +75,7 @@ fun AddTodoScreen(
         ) {
             OutlinedTextField(
                 value = taskName,
-                onValueChange = addTodoViewModel::updateTaskName,
+                onValueChange = onTaskNameChange,
                 label = { Text(stringResource(R.string.task_name_field)) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
@@ -82,7 +83,7 @@ fun AddTodoScreen(
 
             OutlinedTextField(
                 value = description,
-                onValueChange = addTodoViewModel::updateDescription,
+                onValueChange = onDescriptionChange,
                 label = { Text(stringResource(R.string.description_field)) },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -93,7 +94,7 @@ fun AddTodoScreen(
             DropdownSelector(
                 options = listOf(stringResource(R.string.personal), stringResource(R.string.work)),
                 selected = category.ifBlank { defaultCategory },
-                onSelected = addTodoViewModel::updateCategory,
+                onSelected = onCategorySelected,
                 label = stringResource(R.string.category_label)
             )
             if (category.isBlank()) {
@@ -111,9 +112,54 @@ fun AddTodoScreen(
                     stringResource(R.string.medium), stringResource(R.string.high)
                 ),
                 selected = priority.ifBlank { defaultPriority },
-                onSelected = addTodoViewModel::updatePriority,
+                onSelected = onPrioritySelected,
                 label = stringResource(R.string.priority)
             )
         }
     }
+}
+
+@Composable
+fun AddTodoScreen(
+    addTodoViewModel: AddTodoViewModel,
+    onSave: () -> Unit,
+    onCancel: () -> Unit
+) {
+
+    AddTodoScreenContent(
+        taskName = addTodoViewModel.taskName,
+        description = addTodoViewModel.description,
+        category = addTodoViewModel.category,
+        priority = addTodoViewModel.priority,
+        isValid = addTodoViewModel.isValid(),
+        onTaskNameChange = addTodoViewModel::updateTaskName,
+        onDescriptionChange = addTodoViewModel::updateDescription,
+        onCategorySelected = addTodoViewModel::updateCategory,
+        onPrioritySelected = addTodoViewModel::updatePriority,
+        onSave = {
+            if (addTodoViewModel.isValid()) {
+                onSave()
+            }
+        },
+        onCancel = onCancel
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewAddTodo() {
+
+    AddTodoScreenContent(
+        taskName = "",
+        description = "",
+        category = "",
+        priority = "",
+        isValid = false,
+        onTaskNameChange = {},
+        onDescriptionChange = {},
+        onCategorySelected = {},
+        onPrioritySelected = {},
+        onSave = {},
+        onCancel = {}
+    )
 }

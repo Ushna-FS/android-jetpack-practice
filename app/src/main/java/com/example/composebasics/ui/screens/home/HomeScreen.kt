@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.composebasics.R
@@ -22,29 +23,43 @@ import com.example.composebasics.ui.components.SwipeToDeleteContainer
 import com.example.composebasics.ui.components.TodoItem
 import com.example.composebasics.ui.screens.todo.TodoViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(
+fun HomeScreen( //stateful
     viewModel: TodoViewModel,
-    navController: NavController,
+    navController: NavController
 ) {
 
     val todos by viewModel.todos.collectAsState()
+
+    HomeScreenContent(
+        todos = todos,
+        onAddClick = { navController.navigate(AddTodo) },
+        onDelete = { viewModel.deleteTodo(it.id) },
+        onToggle = { viewModel.toggleTodo(it) }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun HomeScreenContent( //stateless
+    todos: List<Todo>,
+    onAddClick: () -> Unit,
+    onDelete: (Todo) -> Unit,
+    onToggle: (Int) -> Unit
+) {
 
     val priorityTodos = todos.filter {
         !it.isCompleted && it.priority?.lowercase() in listOf("high", "medium")
     }
     val recentlyCompleted = todos
         .filter { it.isCompleted }
-        .takeLast(3) // show latest 3 completed
+        .takeLast(3)
 
     Scaffold(
-        topBar = {
-            HomeTopBar()
-        },
+        topBar = { HomeTopBar() },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { navController.navigate(AddTodo) },
+                onClick = onAddClick,
                 containerColor = MaterialTheme.colorScheme.primary
             ) {
                 Icon(Icons.Default.Add, contentDescription = stringResource(R.string.ic_add_desc))
@@ -103,11 +118,11 @@ fun HomeScreen(
                 items(priorityTodos, key = { it.id }) { todo ->
                     SwipeToDeleteContainer(
                         item = todo,
-                        onDelete = { viewModel.deleteTodo(it.id) }
+                        onDelete = onDelete
                     ) { item ->
                         PriorityTodoItem(
                             todo = item,
-                            onToggle = { viewModel.toggleTodo(item.id) }
+                            onToggle = { onToggle(item.id) }
                         )
                     }
                 }
@@ -155,6 +170,25 @@ fun HomeScreen(
             }
         }
     }
+}
+
+//previewing
+@Preview(showBackground = true)
+@Composable
+fun HomeScreenPreview() {
+
+    val sampleTodos = listOf(
+        Todo(1, "Buy groceries", "Personal", priority = "High"),
+        Todo(2, "Finish assignment", "Work", priority = "Medium"),
+        Todo(3, "Read book", "Personal", isCompleted = true)
+    )
+
+    HomeScreenContent(
+        todos = sampleTodos,
+        onAddClick = {},
+        onDelete = {},
+        onToggle = {}
+    )
 }
 
 @Composable
