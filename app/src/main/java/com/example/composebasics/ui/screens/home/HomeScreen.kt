@@ -47,7 +47,7 @@ fun HomeScreen(
                 onClick = { navController.navigate(AddTodo) },
                 containerColor = MaterialTheme.colorScheme.primary
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Add Task")
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.ic_add_desc))
 
             }
         }
@@ -60,7 +60,7 @@ fun HomeScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "No tasks yet.\nTap ' + ' to add one",
+                    text = stringResource(R.string.no_tasks),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
 
@@ -79,7 +79,7 @@ fun HomeScreen(
             item {
                 Spacer(modifier = Modifier.height(20.dp))
                 Text(
-                    text = "PRIORITY TASKS",
+                    text = stringResource(R.string.priority_tasks),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -93,7 +93,7 @@ fun HomeScreen(
                         )
                     ) {
                         Text(
-                            text = "No high priority tasks yet",
+                            text = stringResource(R.string.no_priority),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -117,7 +117,7 @@ fun HomeScreen(
             item {
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = "RECENTLY COMPLETED",
+                    text = stringResource(R.string.recently_completed),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -131,7 +131,7 @@ fun HomeScreen(
                         )
                     ) {
                         Text(
-                            text = "You need to complete a task",
+                            text = stringResource(R.string.complete_txt),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -177,7 +177,7 @@ fun HomeTopBar() {
             ) {
                 Icon(
                     painter = painterResource(R.drawable.tasks),
-                    contentDescription = "Tasks Icon",
+                    contentDescription = stringResource(R.string.ic_task_desc),
                     tint = MaterialTheme.colorScheme.onPrimary
                 )
             }

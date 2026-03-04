@@ -19,7 +19,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.composebasics.R
 import com.example.composebasics.ui.components.DropdownSelector
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -33,14 +35,19 @@ fun AddTodoScreen(
     val description = addTodoViewModel.description
     val category = addTodoViewModel.category
     val priority = addTodoViewModel.priority
+    val defaultCategory = stringResource(R.string.select_category)
+    val defaultPriority = stringResource(R.string.select_priority)
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("New Task") },
+                title = { Text(stringResource(R.string.add_todo_topbar)) },
                 navigationIcon = {
                     IconButton(onClick = { onCancel() }) {
-                        Icon(Icons.Default.Close, contentDescription = "Cancel")
+                        Icon(
+                            Icons.Default.Close,
+                            contentDescription = stringResource(R.string.ic_cancel_desc)
+                        )
                     }
                 },
                 actions = {
@@ -52,7 +59,7 @@ fun AddTodoScreen(
                         },
                         enabled = addTodoViewModel.isValid()
                     ) {
-                        Text("Save")
+                        Text(stringResource(R.string.save))
                     }
                 }
             )
@@ -68,7 +75,7 @@ fun AddTodoScreen(
             OutlinedTextField(
                 value = taskName,
                 onValueChange = addTodoViewModel::updateTaskName,
-                label = { Text("Task Name") },
+                label = { Text(stringResource(R.string.task_name_field)) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -76,7 +83,7 @@ fun AddTodoScreen(
             OutlinedTextField(
                 value = description,
                 onValueChange = addTodoViewModel::updateDescription,
-                label = { Text("Description") },
+                label = { Text(stringResource(R.string.description_field)) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(100.dp)
@@ -84,14 +91,14 @@ fun AddTodoScreen(
 
             // Category selector
             DropdownSelector(
-                options = listOf("Personal", "Work"),
-                selected = category,
+                options = listOf(stringResource(R.string.personal), stringResource(R.string.work)),
+                selected = category.ifBlank { defaultCategory },
                 onSelected = addTodoViewModel::updateCategory,
-                label = "Category"
+                label = stringResource(R.string.category_label)
             )
-            if (category == "Select Category") {
+            if (category.isBlank()) {
                 Text(
-                    text = "Category is required",
+                    text = stringResource(R.string.category_req),
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -99,10 +106,13 @@ fun AddTodoScreen(
 
             // Priority selector
             DropdownSelector(
-                options = listOf("Low", "Medium", "High"),
-                selected = priority,
+                options = listOf(
+                    stringResource(R.string.low),
+                    stringResource(R.string.medium), stringResource(R.string.high)
+                ),
+                selected = priority.ifBlank { defaultPriority },
                 onSelected = addTodoViewModel::updatePriority,
-                label = "Priority"
+                label = stringResource(R.string.priority)
             )
         }
     }

@@ -32,10 +32,13 @@ fun TodoScreen(
     // Collecting StateFlow as Compose State(recomposition trigger)
     val todos by viewModel.todos.collectAsState()
 
-    // local statte that survives recomposition
+    // local state that survives recomposition
     var showCompleted by remember { mutableStateOf(false) }
+    val categoryAll = stringResource(R.string.all)
+    val categoryPersonal = stringResource(R.string.personal)
+    val categoryWork = stringResource(R.string.work)
 
-    var selectedCategory by remember { mutableStateOf("All") }
+    var selectedCategory by remember { mutableStateOf(categoryAll) }
 
     var isSearching by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
@@ -44,8 +47,8 @@ fun TodoScreen(
         .filter { if (showCompleted) true else !it.isCompleted }
         .filter {
             when (selectedCategory) {
-                "Work" -> it.category == "Work"
-                "Personal" -> it.category == "Personal"
+                categoryWork -> it.category == categoryWork
+                categoryPersonal -> it.category == categoryPersonal
                 else -> true
             }
         }
@@ -68,7 +71,10 @@ fun TodoScreen(
                     onClick = { navController.navigate(AddTodo) },
                     containerColor = MaterialTheme.colorScheme.primary
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "Add Task")
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = stringResource(R.string.add_task_desc)
+                    )
                 }
             }
         }
@@ -108,21 +114,21 @@ fun TodoScreen(
             ) {
 
                 FilterChip(
-                    selected = selectedCategory == "All",
-                    onClick = { selectedCategory = "All" },
-                    label = { Text("All") }
+                    selected = selectedCategory == categoryAll,
+                    onClick = { selectedCategory = categoryAll },
+                    label = { Text(stringResource(R.string.all)) }
                 )
 
                 FilterChip(
-                    selected = selectedCategory == "Work",
-                    onClick = { selectedCategory = "Work" },
-                    label = { Text("Work") }
+                    selected = selectedCategory == categoryWork,
+                    onClick = { selectedCategory = categoryWork },
+                    label = { Text(stringResource(R.string.work)) }
                 )
 
                 FilterChip(
-                    selected = selectedCategory == "Personal",
-                    onClick = { selectedCategory = "Personal" },
-                    label = { Text("Personal") }
+                    selected = selectedCategory == categoryPersonal,
+                    onClick = { selectedCategory = categoryPersonal },
+                    label = { Text(stringResource(R.string.personal)) }
                 )
             }
 
@@ -137,7 +143,7 @@ fun TodoScreen(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
 
                         Text(
-                            text = "No tasks, add now",
+                            text = stringResource(R.string.no_tasks),
                             style = MaterialTheme.typography.titleMedium,
                             modifier = Modifier.padding(bottom = 16.dp)
                         )
@@ -150,7 +156,7 @@ fun TodoScreen(
                         ) {
                             Icon(Icons.Default.Add, contentDescription = null)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Add Task")
+                            Text(stringResource(R.string.add_task))
                         }
                     }
                 }
@@ -158,9 +164,9 @@ fun TodoScreen(
             } else if (filteredTodos.isEmpty()) {
 
                 val message = when (selectedCategory) {
-                    "Work" -> "No work related tasks"
-                    "Personal" -> "No personal tasks"
-                    else -> "No tasks available"
+                    categoryWork -> stringResource(R.string.no_work_related_tasks)
+                    categoryPersonal -> stringResource(R.string.no_personal_tasks)
+                    else -> stringResource(R.string.no_tasks_available)
                 }
 
                 Box(
@@ -241,7 +247,7 @@ fun TodoTopBar(
             IconButton(onClick = onSearchClick) {
                 Icon(
                     imageVector = Icons.Default.Search,
-                    contentDescription = "Search",
+                    contentDescription = stringResource(R.string.ic_desc_search),
                     tint = MaterialTheme.colorScheme.onPrimary
                 )
             }
@@ -251,7 +257,9 @@ fun TodoTopBar(
                 contentPadding = PaddingValues(horizontal = 8.dp)
             ) {
                 Text(
-                    text = if (showCompleted) "Hide Completed" else "Show Completed",
+                    text = if (showCompleted) stringResource(R.string.hide_completed) else stringResource(
+                        R.string.show_completed
+                    ),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onPrimary
                 )
@@ -293,7 +301,7 @@ fun EditableTodoItem(
         ) {
             Icon(
                 imageVector = Icons.Default.Edit,
-                contentDescription = "Edit Todo",
+                contentDescription = stringResource(R.string.ic_edit_desc),
                 modifier = Modifier.size(16.dp) // small edit icon
             )
         }
