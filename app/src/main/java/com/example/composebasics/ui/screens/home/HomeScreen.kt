@@ -22,6 +22,7 @@ import com.example.composebasics.navigation.AddTodo
 import com.example.composebasics.ui.components.SwipeToDeleteContainer
 import com.example.composebasics.ui.components.TodoItem
 import com.example.composebasics.ui.screens.todo.TodoViewModel
+import kotlinx.coroutines.launch
 
 @Composable
 fun HomeScreen( //stateful
@@ -30,12 +31,30 @@ fun HomeScreen( //stateful
 ) {
 
     val todos by viewModel.todos.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
     HomeScreenContent(
         todos = todos,
         onAddClick = { navController.navigate(AddTodo) },
-        onDelete = { viewModel.deleteTodo(it.id) },
-        onToggle = { viewModel.toggleTodo(it) }
+        onDelete = { todo ->
+
+            scope.launch {
+
+                viewModel.deleteTodo(todo.id)
+
+                val result = snackbarHostState.showSnackbar(
+                    message = "Task deleted",
+                    actionLabel = "UNDO"
+                )
+
+                if (result == SnackbarResult.ActionPerformed) {
+                    viewModel.restoreTodo()
+                }
+            }
+        },
+        onToggle = { viewModel.toggleTodo(it) },
+        snackbarHostState = snackbarHostState
     )
 }
 
@@ -45,7 +64,8 @@ fun HomeScreenContent( //stateless
     todos: List<Todo>,
     onAddClick: () -> Unit,
     onDelete: (Todo) -> Unit,
-    onToggle: (Int) -> Unit
+    onToggle: (Int) -> Unit,
+    snackbarHostState: SnackbarHostState
 ) {
 
     val priorityTodos = todos.filter {
@@ -56,6 +76,7 @@ fun HomeScreenContent( //stateless
         .takeLast(3)
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = { HomeTopBar() },
         floatingActionButton = {
             FloatingActionButton(
@@ -118,7 +139,7 @@ fun HomeScreenContent( //stateless
                 items(priorityTodos, key = { it.id }) { todo ->
                     SwipeToDeleteContainer(
                         item = todo,
-                        onDelete = onDelete
+                        onDelete = { onDelete(todo) }
                     ) { item ->
                         PriorityTodoItem(
                             todo = item,
@@ -187,7 +208,8 @@ fun HomeScreenPreview() {
         todos = sampleTodos,
         onAddClick = {},
         onDelete = {},
-        onToggle = {}
+        onToggle = {},
+        snackbarHostState = remember { SnackbarHostState() }
     )
 }
 

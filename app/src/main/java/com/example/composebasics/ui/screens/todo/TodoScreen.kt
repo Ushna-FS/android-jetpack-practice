@@ -22,6 +22,7 @@ import com.example.composebasics.navigation.AddTodo
 import com.example.composebasics.navigation.EditTodo
 import com.example.composebasics.ui.components.SwipeToDeleteContainer
 import com.example.composebasics.ui.components.TodoItem
+import kotlinx.coroutines.launch
 
 @Composable
 fun TodoScreenContent(
@@ -37,7 +38,8 @@ fun TodoScreenContent(
     onSearchQueryChange: (String) -> Unit,
     onAddClick: () -> Unit,
     onDelete: (Todo) -> Unit,
-    onToggle: (Int) -> Unit
+    onToggle: (Int) -> Unit,
+    snackbarHostState: SnackbarHostState
 ) {
 
     val categoryAll = stringResource(R.string.all)
@@ -59,6 +61,7 @@ fun TodoScreenContent(
         }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TodoTopBar(
                 showCompleted = showCompleted,
@@ -237,6 +240,8 @@ fun TodoScreen(
 
     var isSearching by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
     TodoScreenContent(
         todos = todos,
@@ -249,9 +254,21 @@ fun TodoScreen(
         onCategorySelected = { selectedCategory = it },
         onSearchQueryChange = { searchQuery = it },
         onAddClick = { navController.navigate(AddTodo) },
-        onDelete = { viewModel.deleteTodo(it.id) },
-        onToggle = { viewModel.toggleTodo(it) },
-        navController = navController
+        onDelete = { todo -> viewModel.deleteTodo(todo.id)
+
+            scope.launch {
+                val result = snackbarHostState.showSnackbar(
+                    message = "Task deleted",
+                    actionLabel = "UNDO"
+                )
+
+                if (result == SnackbarResult.ActionPerformed) {
+                    viewModel.restoreTodo()
+                }
+            }
+        }, onToggle = { viewModel.toggleTodo(it) },
+        navController = navController,
+        snackbarHostState = snackbarHostState
     )
 }
 
@@ -277,7 +294,7 @@ fun PreviewTodoScreen() {
         onAddClick = {},
         onDelete = {},
         onToggle = {},
-        navController = NavController(LocalContext.current)
+        navController = NavController(LocalContext.current), snackbarHostState = SnackbarHostState()
     )
 }
 
