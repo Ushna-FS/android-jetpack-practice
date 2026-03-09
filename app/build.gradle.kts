@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     id("org.jetbrains.kotlin.plugin.serialization") version "2.2.10"
     id("com.google.devtools.ksp")
+    id("com.google.dagger.hilt.android")
 }
 
 android {
@@ -64,6 +65,15 @@ dependencies {
 
     // ViewModel
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+
+    //Hilt
+    implementation (libs.hilt.android)
+    ksp (libs.hilt.compiler)
+    implementation(libs.androidx.hilt.navigation.compose)
+
+    // For ViewModel injection
+    implementation(libs.androidx.hilt.navigation.fragment)
+    annotationProcessor(libs.androidx.hilt.compiler)
 
     //Room DB
     implementation(libs.androidx.room.runtime)

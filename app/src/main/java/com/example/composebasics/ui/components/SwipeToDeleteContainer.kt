@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -24,44 +25,47 @@ fun <T> SwipeToDeleteContainer(
     content: @Composable (T) -> Unit
 ) {
 
-    var isRemoved by remember { mutableStateOf(false) }
+    var isRemoved by remember(item) { mutableStateOf(false) }
+    var deleteTriggered by remember(item) { mutableStateOf(false) }
 
-    val dismissState = rememberSwipeToDismissBoxState(
-        positionalThreshold = { totalDistance ->
-            totalDistance * 0.6f   // require 60% swipe instead of default ~30%
-        },
-        confirmValueChange = { value ->
-            if (value == SwipeToDismissBoxValue.EndToStart) {
-                isRemoved = true
-                true
-            } else {
-                false
-            }
-        }
-    )
 
-    LaunchedEffect(isRemoved) {
-        if (isRemoved) {
-            kotlinx.coroutines.delay(animationDuration.toLong())
-            onDelete(item)
-        }
+    val dismissState = remember(item) {
+        SwipeToDismissBoxState(
+            initialValue = SwipeToDismissBoxValue.Settled,
+            positionalThreshold = { it * 0.6f }  // require 60% swipe instead of default ~30%
+        )
     }
 
-    AnimatedVisibility(
-        visible = !isRemoved,
-        enter = fadeIn(),
-        exit = fadeOut()
-    ) {
-        SwipeToDismissBox(
-            state = dismissState,
-            enableDismissFromStartToEnd = false,
-            backgroundContent = {
-                DeleteBackground(dismissState)
-            },
-            content = {
-                content(item)
-            }
-        )
+    LaunchedEffect(dismissState.currentValue) {
+        if (
+            dismissState.currentValue == SwipeToDismissBoxValue.EndToStart &&
+            !deleteTriggered
+        ) {
+            deleteTriggered = true
+            isRemoved = true
+            delay(animationDuration.toLong())
+            onDelete(item)
+        }
+
+    }
+
+    key(item) {
+        AnimatedVisibility(
+            visible = !isRemoved,
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            SwipeToDismissBox(
+                state = dismissState,
+                enableDismissFromStartToEnd = false,
+                backgroundContent = {
+                    DeleteBackground(dismissState)
+                },
+                content = {
+                    content(item)
+                }
+            )
+        }
     }
 }
 

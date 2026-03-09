@@ -1,8 +1,9 @@
 package com.example.composebasics.data
 
+import jakarta.inject.Inject
 import kotlinx.coroutines.flow.Flow
 
-class TodoRepository(private val dao: TodoDao) {
+class TodoRepository @Inject constructor(private val dao: TodoDao) {
 
     val todos: Flow<List<Todo>> = dao.getTodos()
 

@@ -8,13 +8,17 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import dagger.hilt.android.lifecycle.HiltViewModel
+import jakarta.inject.Inject
 
-class TodoViewModel(
+@HiltViewModel
+class TodoViewModel @Inject constructor(
     private val repository: TodoRepository
 ) : ViewModel() {
 
     val todos: StateFlow<List<Todo>> = repository.todos
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+    private var recentlyDeletedTodo: Todo? = null
 
     fun addTodo(
         title: String,
@@ -59,7 +63,17 @@ class TodoViewModel(
     fun deleteTodo(id: Int) {
         viewModelScope.launch {
             val todo = todos.value.find { it.id == id } ?: return@launch
+            recentlyDeletedTodo = todo
             repository.deleteTodo(todo)
+        }
+    }
+
+    fun restoreTodo() {
+        viewModelScope.launch {
+            recentlyDeletedTodo?.let {
+                repository.addTodo(it)
+                recentlyDeletedTodo = null
+            }
         }
     }
 
